@@ -1,0 +1,4 @@
+models/radford et al/*
+.vscode
+__pycache__
+.venv
