@@ -5,5 +5,6 @@ class Detector(ABC):
     def  __init__(self):
         pass
     @abstractmethod
-    def detect(self, text):
+    def predict_proba(self, text):
         pass
+

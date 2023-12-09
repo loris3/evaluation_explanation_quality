@@ -1,3 +1,6 @@
 [submodule "gpt-2-output-dataset"]
 	path = gpt2outputdataset
 	url = https://github.com/loris3/gpt-2-output-dataset
+[submodule "lime"]
+	path = lime
+	url = https://github.com/loris3/lime
