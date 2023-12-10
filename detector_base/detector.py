@@ -7,4 +7,6 @@ class Detector(ABC):
     @abstractmethod
     def predict_proba(self, text):
         pass
+    def predict_proba_machine(self, text):
+        return self.predict_proba(text)[:,0]
 

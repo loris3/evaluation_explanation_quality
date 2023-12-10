@@ -4,3 +4,6 @@
 [submodule "lime"]
 	path = lime
 	url = https://github.com/loris3/lime
+[submodule "transformers"]
+	path = transformers
+	url = https://github.com/loris3/transformers
