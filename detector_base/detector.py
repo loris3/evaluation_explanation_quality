@@ -9,4 +9,13 @@ class Detector(ABC):
         pass
     def predict_proba_machine(self, text):
         return self.predict_proba(text)[:,0]
+    def predict_label(self, text): # there is no logic to the order: whatever matches the anchors visualization
+        result = self.predict_proba(text)[:,0]
+        #print(result)
+        # result[result >= 0.5] = 0
+        # result[result < 0.5] = 1
+        result = (result < 0.5) * 1
+        #print(result) 
+        return result
+
 

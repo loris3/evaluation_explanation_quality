@@ -7,3 +7,6 @@
 [submodule "transformers"]
 	path = transformers
 	url = https://github.com/loris3/transformers
+[submodule "detectgpt"]
+	path = detectgpt
+	url = https://github.com/loris3/detectgpt
