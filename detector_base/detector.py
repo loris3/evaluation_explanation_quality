@@ -8,7 +8,8 @@ class Detector(ABC):
     def predict_proba(self, text):
         pass
     def predict_proba_machine(self, text):
-        return self.predict_proba(text)[:,0]
+      #  print("self.predict_proba(text)[:,0].reshape(-1,1)",self.predict_proba(text)[:,0].flatten())
+        return self.predict_proba(text)[:,0].astype(float)
     def predict_label(self, text): # there is no logic to the order: whatever matches the anchors visualization
         result = self.predict_proba(text)[:,0]
         #print(result)
@@ -18,4 +19,6 @@ class Detector(ABC):
         #print(result) 
         return result
 
-
+    @abstractmethod
+    def get_mask_token():
+        pass
