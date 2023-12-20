@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-
+import numpy as np
 class Detector(ABC):
     @abstractmethod
     def  __init__(self):
@@ -9,7 +9,9 @@ class Detector(ABC):
         pass
     def predict_proba_machine(self, text):
       #  print("self.predict_proba(text)[:,0].reshape(-1,1)",self.predict_proba(text)[:,0].flatten())
-        return self.predict_proba(text)[:,0].astype(float)
+        out =self.predict_proba(text)[:,0].astype(bool).tolist()
+        assert len(out) == len(text)
+        return out
     def predict_label(self, text): # there is no logic to the order: whatever matches the anchors visualization
         result = self.predict_proba(text)[:,0]
         #print(result)
@@ -19,6 +21,6 @@ class Detector(ABC):
         #print(result) 
         return result
 
-    @abstractmethod
-    def get_mask_token():
-        pass
+   # @abstractmethod
+    def get_pad_token(self):
+        return "<|loris|>"
