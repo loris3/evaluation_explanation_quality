@@ -9,7 +9,7 @@ class Detector(ABC):
         pass
     def predict_proba_machine(self, text):
       #  print("self.predict_proba(text)[:,0].reshape(-1,1)",self.predict_proba(text)[:,0].flatten())
-        out =self.predict_proba(text)[:,0].astype(bool).tolist()
+        out =self.predict_proba(text)[:,0].tolist()
         assert len(out) == len(text)
         return out
     def predict_label(self, text): # there is no logic to the order: whatever matches the anchors visualization
