@@ -9,3 +9,12 @@ data
 args.json
 *.json
 *.png
+dataset_train.pkl
+dataset_test.pkl
+h3/indicating_words_en_chatgpt.txt
+h3/indicating_words_en_human.txt
+h3_splits/en_test.csv
+h3_splits/en_train.csv
+models/t5-small-encoder.onnx
+models/t5-small-decoder.onnx
+models/t5-small-init-decoder.onnx

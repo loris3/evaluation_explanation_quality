@@ -13,11 +13,11 @@ class Detector(ABC):
         assert len(out) == len(text)
         return out
     def predict_label(self, text): # there is no logic to the order: whatever matches the anchors visualization
-        result = self.predict_proba(text)[:,0]
+        result = self.predict_proba(text)[:,0] > self.predict_proba(text)[:,1]
         #print(result)
         # result[result >= 0.5] = 0
         # result[result < 0.5] = 1
-        result = (result < 0.5) * 1
+       # result = (result < 0.5) * 1
         #print(result) 
         return result
 
