@@ -2,18 +2,22 @@ from abc import ABC, abstractmethod
 import pickle
 import os
 import hashlib
-sha256 = hashlib.sha256()
+
 
 
 
 class FI_Explainer(ABC):
     @abstractmethod
-    def  __init__(self):
+    def  __init__(self, detector):
         pass
 
     # return a list of (word,feature-importance) tuples
     @abstractmethod
     def get_fi_scores(self, document):
+        pass
+
+    @abstractmethod
+    def tokenize(self, document):
         pass
     
     def get_explanations_cached(self, documents, cache_dir="./explanation_cache"):
@@ -24,9 +28,11 @@ class FI_Explainer(ABC):
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
       #  print(type(document), document)
+        sha256 = hashlib.sha256()
         sha256.update(document.encode('utf-8'))
         exp_hash = sha256.hexdigest()
-        path = os.path.join(cache_dir,str(exp_hash)+".pkl")
+        path = os.path.join(cache_dir,str(exp_hash)+"_"+self.__class__.__name__+"_"+self.detector.__class__.__name__+".pkl")
+       # print(path)
         if os.path.isfile(path):
             return pickle.load(open(path,'rb'))
         else:
