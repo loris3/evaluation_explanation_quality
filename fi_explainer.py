@@ -19,10 +19,21 @@ class FI_Explainer(ABC):
     @abstractmethod
     def tokenize(self, document):
         pass
+    @abstractmethod
+    def get_vanilla_visualization_HTML(self, document):
+        pass
     
     def get_explanations_cached(self, documents, cache_dir="./explanation_cache"):
         return [self.get_explanation_cached(document, cache_dir) for document in documents]
 
+    def delete_cached_explanation(self, document, cache_dir="./explanation_cache"):
+        sha256 = hashlib.sha256()
+        sha256.update(document.encode('utf-8'))
+        exp_hash = sha256.hexdigest()
+        path = os.path.join(cache_dir,str(exp_hash)+"_"+self.__class__.__name__+"_"+self.detector.__class__.__name__+".pkl")
+       # print(path)
+        if os.path.isfile(path):
+            os.remove(path)
 
     def get_explanation_cached(self, document, cache_dir="./explanation_cache"):
         if not os.path.exists(cache_dir):
