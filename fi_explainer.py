@@ -52,4 +52,15 @@ class FI_Explainer(ABC):
 
             pickle.dump(e, open(path,'wb'))
             return e
-            
+    @abstractmethod     
+    def as_list(self, exp, label=0):
+        pass
+    @abstractmethod
+    def get_barplots_HTML(self, document):
+        pass
+    @abstractmethod
+    def get_vanilla_visualization_HTML(self, document):
+        pass
+    @abstractmethod
+    def get_highlighted_text_HTML(self, document):
+        pass

@@ -130,6 +130,8 @@ class LIME_Explainer(FI_Explainer):
         # But really confusing here. 
         # labels=[0,1]  --> Fix order: always show machine first, always use machine as reference for text plot
         return explanation.as_html(labels=[0,1], predict_proba=False) 
+    def as_list(self, exp, label=0):
+        return exp.as_list(label=label)
 
 import shap
 import transformers
@@ -171,3 +173,26 @@ class SHAP_Explainer(FI_Explainer):
     def get_vanilla_visualization_HTML(self, document):
         explanation = self.get_explanation_cached(document)
         return shap.plots.text(explanation, display=False)
+    def as_list(self, exp, label=0):
+        return list(zip(exp.data[0], exp.values[0,:,label]))
+    # TODO duplicate code
+    def get_barplots_HTML(self, document):
+        plt.ioff()
+        fig = plt.figure()
+        _ = shap.plots.bar(self.get_explanation_cached(document)[0,:,0], show=False)
+        tmpfile = BytesIO()
+        fig.savefig(tmpfile, format='png');
+        encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
+        barplot_machine = '<img src=\'data:image/png;base64,{}\'>'.format(encoded)
+
+        fig = plt.figure()
+        _ = shap.plots.bar(self.get_explanation_cached(document)[0,:,1], show=False)
+        tmpfile = BytesIO()
+        fig.savefig(tmpfile, format='png');
+        encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
+        barplot_human = '<img src=\'data:image/png;base64,{}\'>'.format(encoded)
+
+        return barplot_machine, barplot_human
+    def get_highlighted_text_HTML(self, document):
+
+        return shap.plots.text(self.get_explanation_cached(document),display=False)
