@@ -20,14 +20,23 @@ class LIME_Explainer(FI_Explainer):
         self.splitter = re.compile(r'(%s)|$' % self.explainer.split_expression) # for tokenize()
     def get_explanation(self, document):
         return self.explainer.explain_instance(document, self.detector.predict_proba, num_features=self.num_features, num_samples=self.num_samples, labels=[0,1]) # labels=0,1 as the detectors can technically be multi class
-    def get_fi_scores(self, document):
-        return self.get_explanation_cached(document).as_map()
+    def get_fi_scores(self, document, fill=False):
+        fi_scores = self.get_explanation_cached(document).as_map()
+        if fill:
+            # set all tokens not in top_k to 0
+            return {label: [(i,dict(fi_scores[0])[i]) if i in dict(fi_scores[0]) else (i,0) for i, _ in enumerate(self.tokenize(document))] for label,l in fi_scores.items()}
+        else:
+            return fi_scores
     def get_fi_scores_batch(self, documents):
         return [self.get_fi_scores(document) for document in documents]
     
     def tokenize(self, document):
-        return [s for s in self.splitter.split(document) if s and s!= " "] # as in LIME source
-    
+        return [s for s in self.splitter.split(document) if s and s!= " "] # as in LIME source 
+    # warning: LIME uses the reges in self.splitter internally. It collapses whitespace/the split token by default.
+    #        => untokenize(tokenize(d))) != d if repeated self.explainer.split_expression
+    #        ==> LIME is cannot be faithful if presence/absence of repeated split_expressions are a feature  
+    def untokenize(self, tokens):
+        return " ".join(tokens)
     # shortened version of as_html() without the barplots for TextExplainer
     # always explains with machine as reference (blue - orange + FI for machine)
     def get_highlighted_text_HTML(self, document):
@@ -156,11 +165,13 @@ class SHAP_Explainer(FI_Explainer):
 
     def tokenize(self, document):
         return self.masker.data_transform(document)[0]
-
+    def untokenize(self, tokens):
+        return "".join(tokens)
 
     def get_explanation(self, document):
         return self.explainer([document])
-    def get_fi_scores(self, document):
+    def get_fi_scores(self, document, fill=False):
+        # fill by default
         exp = self.get_explanation_cached(document)
         # reshape to match lime map
         values_machine = exp.values[:,:,0][0]
@@ -174,7 +185,8 @@ class SHAP_Explainer(FI_Explainer):
         explanation = self.get_explanation_cached(document)
         return shap.plots.text(explanation, display=False)
     def as_list(self, exp, label=0):
-        return list(zip(exp.data[0], exp.values[0,:,label]))
+        label = int(label) # TODO hotfix
+        return [(word, fi) for word,fi in zip(exp.data[0], exp.values[0,:,label])]
     # TODO duplicate code
     def get_barplots_HTML(self, document):
         plt.ioff()
