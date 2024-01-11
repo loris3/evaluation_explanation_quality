@@ -53,7 +53,7 @@ class FI_Explainer(ABC):
         if os.path.isfile(path):
             return pickle.load(open(path,'rb'))
         else:
-            print("regen", document)
+          #  print("regen", document)
             e = self.get_explanation(document)
 
             pickle.dump(e, open(path,'wb'))

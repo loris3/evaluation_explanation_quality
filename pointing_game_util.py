@@ -3,7 +3,7 @@ import numpy as np
 
 
 # create hybrid documents as proposed by Poerner et al.:
-# sentence_tokenizer is common for all explanaiton methods so that the input to the detectors is the same
+# sentence_tokenizer is common for all explanaiton methods so that the input to the detectors is the same. This is verified in an assert in the notebook
 # word_tokenizer: use the same splitting/indexing method that the explanation method uses for easy calculation of the pointing game accuracy.
 def hybrid(documents, labels, lenght = 10 , word_tokenizer=word_tokenize):
     hybrid_documents = []
@@ -15,34 +15,20 @@ def hybrid(documents, labels, lenght = 10 , word_tokenizer=word_tokenize):
     # poerner et al.: shuffle
     np.random.seed(42)
     np.random.shuffle(tokenized_sentences)
-    
     for i in range(0, len(tokenized_sentences), lenght): # TODO remove loop
         batch = tokenized_sentences[i:min(i+lenght, len(tokenized_sentences))]
-
         hybrid_tokenized_document = []
-     #   h = []
-   #     hybrid_X = []
         hybrid_labels = []
-    #    print(batch)
         for sentence, label in batch:
-           # print("sent",sentence)
             for word in word_tokenizer(sentence):
-              #  h.append(sentence)
                 hybrid_tokenized_document.append(word)
-              #  hybrid_X.append(word)
                 hybrid_labels.append(label)
-       # print("hybrid_tokenized_document",hybrid_tokenized_document)
         hybrid_documents.append(" ".join([sentence for sentence,_ in batch]))
         tokenized_hybrid_documents.append(hybrid_tokenized_document)
         GT.append(np.array(hybrid_labels))
-
-    # print("hybrid_documents",hybrid_documents)
-    # print("tokenized_hybrid_documents",tokenized_hybrid_documents)
-    # print("GT", GT)
     return hybrid_documents, tokenized_hybrid_documents, GT
 
 def get_pointing_game_acc(hybrid_documents, explainer, predictions_hybrid, GT):
-    
     fi_scores = explainer.get_fi_scores_batch(hybrid_documents)
     
     # for each <explanation on a hybrid document> get the index of the top word by FI FOR THE PREDICTED CLASS.

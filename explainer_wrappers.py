@@ -10,6 +10,10 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 
+
+from tqdm import tqdm
+
+
 class LIME_Explainer(FI_Explainer):
     def __init__(self, detector, num_features=10, num_samples=1000):
         self.num_features = num_features
@@ -28,7 +32,7 @@ class LIME_Explainer(FI_Explainer):
         else:
             return fi_scores
     def get_fi_scores_batch(self, documents):
-        return [self.get_fi_scores(document) for document in documents]
+        return [self.get_fi_scores(document) for document in tqdm(documents, desc="Generating explanations")]
     
     def tokenize(self, document):
         return [s for s in self.splitter.split(document) if s and s!= " "] # as in LIME source 
@@ -160,7 +164,7 @@ class SHAP_Explainer(FI_Explainer):
 
 
         self.masker = shap.maskers.Text(self.custom_tokenizer, mask_token=self.detector.get_pad_token())
-        self.explainer = shap.Explainer(self.detector.predict_proba, masker=self.masker, output_names=["machine", "human"])
+        self.explainer = shap.Explainer(self.detector.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True)
 
 
     def tokenize(self, document):
@@ -179,7 +183,7 @@ class SHAP_Explainer(FI_Explainer):
 
         return {0 : list(enumerate(values_machine)), 1: list(enumerate(values_human))}
     def get_fi_scores_batch(self, documents):
-        return [self.get_fi_scores(document) for document in documents]
+        return [self.get_fi_scores(document) for document in tqdm(documents, desc="Generating explanations")]
     
     def get_vanilla_visualization_HTML(self, document):
         explanation = self.get_explanation_cached(document)
@@ -208,3 +212,37 @@ class SHAP_Explainer(FI_Explainer):
     def get_highlighted_text_HTML(self, document):
 
         return shap.plots.text(self.get_explanation_cached(document),display=False)
+
+
+from anchor import anchor_text
+import spacy
+
+class Anchor_Explainer(FI_Explainer):
+    def __init__(self, detector):
+        self.detector = detector
+
+        nlp = spacy.load('en_core_web_sm')
+        self.explainer = anchor_text.AnchorText(nlp, ['machine', 'human',], use_unk_distribution=True, mask_string=self.detector.get_pad_token())
+    def tokenize(self, tokenize):
+        raise NotImplementedError
+    def untokenize(self, tokens):
+        raise NotImplementedError
+    def get_explanation(self, document):
+        return self.explainer.explain_instance(document, self.detector.predict_label, 
+                                    threshold=0.8, # i.e. tau i.e. min p(anchor applies) in D
+                                    delta=0.2, # default 0.1, 0.05 was used in the paper, confidence 
+                                    tau=0.15, # i.e. epsilon, increase to increase tolerance
+                                    batch_size=10, 
+                                    onepass=True, # only applies to BERT, onepass=True, # default false
+                                    # not used:    use_proba=False, 
+                                    beam_size=4)
+    def get_fi_scores(self, document, fill=False):
+        raise NotImplementedError
+    def get_vanilla_visualization_HTML(self, document):
+        raise NotImplementedError
+    def as_list(self, exp, label=0):
+        raise NotImplementedError
+    def get_barplots_HTML(self, document):
+        raise NotImplementedError
+    def get_highlighted_text_HTML(self, document):
+        raise NotImplementedError
