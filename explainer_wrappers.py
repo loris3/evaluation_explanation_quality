@@ -9,21 +9,26 @@ from sklearn.utils import check_random_state
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
-
+from detectgpt.detector_detectgpt import DetectorDetectGPT
 
 from tqdm import tqdm
 
 
 class LIME_Explainer(FI_Explainer):
-    def __init__(self, detector, num_features=10, num_samples=1000):
+    def __init__(self, detector, num_features=10):
         self.num_features = num_features
-        self.num_samples = num_samples
+
+
+        self.num_samples = 1000 if not isinstance(detector, DetectorDetectGPT) else 100
+
+
         self.detector = detector #detector_class()
         self.explainer = LimeTextExplainer(class_names=["machine", "human"], bow=False, split_expression= r"\s",mask_string=self.detector.get_pad_token()) # TODO
    
         self.splitter = re.compile(r'(%s)|$' % self.explainer.split_expression) # for tokenize()
     def get_explanation(self, document):
-        return self.explainer.explain_instance(document, self.detector.predict_proba, num_features=self.num_features, num_samples=self.num_samples, labels=[0,1]) # labels=0,1 as the detectors can technically be multi class
+        self.explainer.random_state = check_random_state(42) 
+        return self.explainer.explain_instance(document, self.detector.predict_proba, num_features=self.num_features, num_samples=self.num_samples, labels=[0,1],) # labels=0,1 as the detectors can technically be multi class
     def get_fi_scores(self, document, fill=False):
         fi_scores = self.get_explanation_cached(document).as_map()
         if fill:
@@ -164,8 +169,11 @@ class SHAP_Explainer(FI_Explainer):
 
 
         self.masker = shap.maskers.Text(self.custom_tokenizer, mask_token=self.detector.get_pad_token())
-        self.explainer = shap.Explainer(self.detector.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True)
+        if isinstance(detector, DetectorDetectGPT):
 
+            self.explainer = shap.Explainer(self.detector.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=42, algorithm="partition", max_evals=100)
+        else:
+            self.explainer = shap.Explainer(self.detector.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=42, algorithm="partition") # default max_evals is 500
 
     def tokenize(self, document):
         return self.masker.data_transform(document)[0]
@@ -216,12 +224,14 @@ class SHAP_Explainer(FI_Explainer):
 
 from anchor import anchor_text
 import spacy
-
+import torch
 class Anchor_Explainer(FI_Explainer):
     def __init__(self, detector):
         self.detector = detector
 
         nlp = spacy.load('en_core_web_sm')
+        np.random.seed(42)
+        torch.manual_seed(42) 
         self.explainer = anchor_text.AnchorText(nlp, ['machine', 'human',], use_unk_distribution=True, mask_string=self.detector.get_pad_token())
     def tokenize(self, tokenize):
         raise NotImplementedError
