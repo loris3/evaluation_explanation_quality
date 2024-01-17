@@ -10,3 +10,6 @@
 [submodule "detectgpt"]
 	path = detectgpt
 	url = https://github.com/loris3/detectgpt
+[submodule "anchor"]
+	path = anchor
+	url = https://github.com/loris3/anchor

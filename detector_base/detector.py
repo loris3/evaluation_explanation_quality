@@ -10,7 +10,10 @@ class Detector(ABC):
         pass
     # returns 0 if machine is more likely, 1 if human more likely
     def predict_label(self, text):
-        return self.predict_proba(text).argmax(axis=1)
+       # print("Input", text)
+        r = self.predict_proba(text).argmax(axis=1)
+       # print(r, np.sum(r)/len(r))
+        return r#self.predict_proba(text).argmax(axis=1)
     # def predict_proba_machine(self, text):
     #   #  print("self.predict_proba(text)[:,0].reshape(-1,1)",self.predict_proba(text)[:,0].flatten())
     #     out =self.predict_proba(text)[:,0].tolist()

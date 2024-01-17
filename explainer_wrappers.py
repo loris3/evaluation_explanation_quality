@@ -220,32 +220,41 @@ class SHAP_Explainer(FI_Explainer):
     def get_highlighted_text_HTML(self, document):
 
         return shap.plots.text(self.get_explanation_cached(document),display=False)
+import sys
+sys.path.insert(0, '.') # force the use of local package
 
-
-from anchor import anchor_text
+from thesis.anchor.anchor import anchor_text
 import spacy
 import torch
 class Anchor_Explainer(FI_Explainer):
     def __init__(self, detector):
         self.detector = detector
-
-        nlp = spacy.load('en_core_web_sm')
         np.random.seed(42)
         torch.manual_seed(42) 
-        self.explainer = anchor_text.AnchorText(nlp, ['machine', 'human',], use_unk_distribution=True, mask_string=self.detector.get_pad_token())
+        nlp = spacy.load('en_core_web_sm')
+
+        self.explainer = anchor_text.AnchorText(nlp, ['machine', 'human',], use_unk_distribution=False, mask_string=self.detector.get_pad_token())
+        # use_unk_distribution=True masks randomly. For "human" text, this fails to flip the label for e.g. the first document in the test set yielding an empty explanation.
     def tokenize(self, tokenize):
         raise NotImplementedError
     def untokenize(self, tokens):
         raise NotImplementedError
     def get_explanation(self, document):
+        np.random.seed(42)
+        torch.manual_seed(42) 
         return self.explainer.explain_instance(document, self.detector.predict_label, 
-                                    threshold=0.8, # i.e. tau i.e. min p(anchor applies) in D
-                                    delta=0.2, # default 0.1, 0.05 was used in the paper, confidence 
-                                    tau=0.15, # i.e. epsilon, increase to increase tolerance
-                                    batch_size=10, 
-                                    onepass=True, # only applies to BERT, onepass=True, # default false
+                                    threshold=0.75, # i.e. tau i.e. min p(anchor applies) in D
+                                    delta=0.1, # default 0.1, 0.05 was used in the paper, confidence 
+                                    tau=0.3,# was 0.15, # i.e. epsilon, increase to increase tolerance
+                                    batch_size=5, 
+                                    onepass=True, # only applies to BERT, onepass=True, # default false. True is infeasable (slow)
                                     # not used:    use_proba=False, 
-                                    beam_size=4)
+                                    beam_size=4,
+                                    max_anchor_size=10, 
+                                  verbose=True,
+                                   #     stop_on_first=True, # default True (for text, hardcoded)
+                                    coverage_samples=1 # default 1 (for text, hardcoded, argument added back in in this fork for debugging)
+        )
     def get_fi_scores(self, document, fill=False):
         raise NotImplementedError
     def get_vanilla_visualization_HTML(self, document):
