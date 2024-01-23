@@ -233,7 +233,7 @@ class Anchor_Explainer(FI_Explainer):
         torch.manual_seed(42) 
         nlp = spacy.load('en_core_web_sm')
 
-        self.explainer = anchor_text.AnchorText(nlp, ['machine', 'human',], use_unk_distribution=False, mask_string=self.detector.get_pad_token())
+        self.explainer = anchor_text.AnchorText(nlp, ['machine', 'human',], use_unk_distribution=True, mask_string=self.detector.get_pad_token())
         # use_unk_distribution=True masks randomly. For "human" text, this fails to flip the label for e.g. the first document in the test set yielding an empty explanation.
     def tokenize(self, tokenize):
         raise NotImplementedError
@@ -252,6 +252,7 @@ class Anchor_Explainer(FI_Explainer):
                                     beam_size=4,
                                     max_anchor_size=10, 
                                   verbose=True,
+
                                    #     stop_on_first=True, # default True (for text, hardcoded)
                                     coverage_samples=1 # default 1 (for text, hardcoded, argument added back in in this fork for debugging)
         )
