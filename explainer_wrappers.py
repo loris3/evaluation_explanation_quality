@@ -219,7 +219,7 @@ class SHAP_Explainer(FI_Explainer):
         return barplot_machine, barplot_human
     def get_highlighted_text_HTML(self, document):
 
-        return shap.plots.text(self.get_explanation_cached(document),display=False)
+        return shap.plots.text(self.get_explanation_cached(document)[0,:,0],display=False)
 import sys
 sys.path.insert(0, '.') # force the use of local package
 
@@ -233,7 +233,7 @@ class Anchor_Explainer(FI_Explainer):
         torch.manual_seed(42) 
         nlp = spacy.load('en_core_web_sm')
 
-        self.explainer = anchor_text.AnchorText(nlp, ['machine', 'human',], use_unk_distribution=True, mask_string=self.detector.get_pad_token())
+        self.explainer = anchor_text.AnchorText(nlp, ['machine', 'human',], use_unk_distribution=False, mask_string=self.detector.get_pad_token()) # use_unk_distribution=False: use RoBERTa, the alternative is using MASK tokens, wich curiously is slower (for class "machine" as f(x)=machine is rare with this strategy after a certain number of words masked, see masking_strategy_test.ipynb)
         # use_unk_distribution=True masks randomly. For "human" text, this fails to flip the label for e.g. the first document in the test set yielding an empty explanation.
     def tokenize(self, tokenize):
         raise NotImplementedError
@@ -244,17 +244,18 @@ class Anchor_Explainer(FI_Explainer):
         torch.manual_seed(42) 
         return self.explainer.explain_instance(document, self.detector.predict_label, 
                                     threshold=0.75, # i.e. tau i.e. min p(anchor applies) in D
-                                    delta=0.1, # default 0.1, 0.05 was used in the paper, confidence 
+                                                    # note that this has little effect on the runtime in practice: either the search will complete fast and with high p, or take up all allowed samples and be in single digits
+                                    delta=0.1, # default 0.1, 0.05 was used in the paper, requested confidence 
                                     tau=0.3,# was 0.15, # i.e. epsilon, increase to increase tolerance
-                                    batch_size=5, 
-                                    onepass=True, # only applies to BERT, onepass=True, # default false. True is infeasable (slow)
+                                    batch_size=5, # default was 10, determines how many perturbations are generated per lucb iteration, decreased here to speed up computation
+                                    onepass=True, # only applies to BERT, onepass=True, # default false. True is infeasable (very slow)
                                     # not used:    use_proba=False, 
-                                    beam_size=4,
-                                    max_anchor_size=10, 
-                                  verbose=True,
-
+                                    # beam_size=10, # default (for text, hardcoded)
+                                    max_anchor_size=10, # to limit runtime to 5 min @ 200 samples per len(anchor) from 1 to 10 
                                    #     stop_on_first=True, # default True (for text, hardcoded)
-                                    coverage_samples=1 # default 1 (for text, hardcoded, argument added back in in this fork for debugging)
+                                    coverage_samples=1, # default 1 (for text, hardcoded, argument added back in in this fork for debugging)
+                                    verbose=False,
+                                    max_samples_lucb=200, # new argument, limits number of samples used in lucb for each len(anchor) in [1,max_anchor_size]. Does not affect the search for "the best of each size" when failing to find an anchor with the required treshold.
         )
     def get_fi_scores(self, document, fill=False):
         raise NotImplementedError
