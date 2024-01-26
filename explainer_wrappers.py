@@ -224,6 +224,7 @@ import sys
 sys.path.insert(0, '.') # force the use of local package
 
 from thesis.anchor.anchor import anchor_text
+from thesis.anchor.anchor import anchor_explanation
 import spacy
 import torch
 class Anchor_Explainer(FI_Explainer):
@@ -236,7 +237,8 @@ class Anchor_Explainer(FI_Explainer):
         self.explainer = anchor_text.AnchorText(nlp, ['machine', 'human',], use_unk_distribution=False, mask_string=self.detector.get_pad_token()) # use_unk_distribution=False: use RoBERTa, the alternative is using MASK tokens, wich curiously is slower (for class "machine" as f(x)=machine is rare with this strategy after a certain number of words masked, see masking_strategy_test.ipynb)
         # use_unk_distribution=True masks randomly. For "human" text, this fails to flip the label for e.g. the first document in the test set yielding an empty explanation.
     def tokenize(self, tokenize):
-        raise NotImplementedError
+        processed = self.explainer.nlp(tokenize)
+        return [x.text_with_ws for x in processed] # Note: words are technically capped to dtype='<U80'
     def untokenize(self, tokens):
         raise NotImplementedError
     def get_explanation(self, document):
@@ -266,4 +268,5 @@ class Anchor_Explainer(FI_Explainer):
     def get_barplots_HTML(self, document):
         raise NotImplementedError
     def get_highlighted_text_HTML(self, document):
-        raise NotImplementedError
+        exp = self.get_explanation_cached(document)
+        return anchor_explanation.AnchorExplanation('text', exp, self.explainer.as_html).as_html()

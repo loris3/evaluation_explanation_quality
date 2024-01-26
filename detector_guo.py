@@ -13,7 +13,7 @@ class DetectorGuo(Detector):
        
         self.model = AutoModelForSequenceClassification.from_pretrained("Hello-SimpleAI/chatgpt-detector-roberta")
 
-        self.tokenizer = AutoTokenizer.from_pretrained("Hello-SimpleAI/chatgpt-detector-roberta", additional_special_tokens=["<|loris|>"])
+        self.tokenizer = AutoTokenizer.from_pretrained("Hello-SimpleAI/chatgpt-detector-roberta", additional_special_tokens=["<|pert_mask|>"])
         self.model.eval()
         self.model = self.model.to(self.device)
 
@@ -51,4 +51,4 @@ class DetectorGuo(Detector):
     def get_pad_token_id(self):
         return self.tokenizer.additional_special_tokens_ids[0] # TODO
     def get_pad_token(self):
-        return "<|loris|>" # TODO
+        return "<|pert_mask|>" # TODO

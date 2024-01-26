@@ -11,6 +11,7 @@ args.json
 *.png
 dataset_train.pkl
 dataset_test.pkl
+dataset_user_study.pkl
 h3/indicating_words_en_chatgpt.txt
 h3/indicating_words_en_human.txt
 h3_splits/en_test.csv
