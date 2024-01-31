@@ -12,7 +12,8 @@ class DetectorDummy(Detector):
     def predict_proba(self, texts):
      
         results = []
-        for text in texts:  
+        for text in texts:
+          np.random.seed(42)
           offset = np.random.uniform(0.001, 0.01)
         #  print(self.human_watermark in text, text)
           if (self.machine_watermark in text):

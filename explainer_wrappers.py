@@ -33,7 +33,7 @@ class LIME_Explainer(FI_Explainer):
         fi_scores = self.get_explanation_cached(document).as_map()
         if fill:
             # set all tokens not in top_k to 0
-            return {label: [(i,dict(fi_scores[0])[i]) if i in dict(fi_scores[0]) else (i,0) for i, _ in enumerate(self.tokenize(document))] for label,l in fi_scores.items()}
+            return {label: [(i,dict(fi_scores[label])[i]) if i in dict(fi_scores[label]) else (i,0) for i, _ in enumerate(self.tokenize(document))] for label,l in fi_scores.items()}
         else:
             return fi_scores
     def get_fi_scores_batch(self, documents):

@@ -44,11 +44,8 @@ class FI_Explainer(ABC):
     def get_explanation_cached(self, document, cache_dir="./explanation_cache"):
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
-      #  print(type(document), document)
-        sha256 = hashlib.sha256()
-        sha256.update(document.encode('utf-8'))
-        exp_hash = sha256.hexdigest()
-        path = os.path.join(cache_dir,str(exp_hash)+"_"+self.__class__.__name__+"_"+self.detector.__class__.__name__+".pkl")
+      
+        path = os.path.join(cache_dir,self.get_hash(document)+".pkl")
        # print(path)
         if os.path.isfile(path):
             return pickle.load(open(path,'rb'))
@@ -58,6 +55,11 @@ class FI_Explainer(ABC):
 
             pickle.dump(e, open(path,'wb'))
             return e
+    def get_hash(self, document):
+        sha256 = hashlib.sha256()
+        sha256.update(document.encode('utf-8'))
+        exp_hash = sha256.hexdigest()
+        return str(exp_hash)+"_"+self.__class__.__name__+"_"+self.detector.__class__.__name__
     @abstractmethod     
     def as_list(self, exp, label=0):
         pass

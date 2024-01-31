@@ -25,7 +25,9 @@ class DetectorGuo(Detector):
         #     texts = [texts]
         results = []
         for text in texts:  
-          
+            np.random.seed(42)
+            torch.manual_seed(42) 
+
             tokens = self.tokenizer.encode(text)
            # all_tokens = len(tokens)
             tokens = tokens[:self.tokenizer.model_max_length - 2]
@@ -49,6 +51,6 @@ class DetectorGuo(Detector):
         return np.concatenate(results, axis=0)
     
     def get_pad_token_id(self):
-        return self.tokenizer.additional_special_tokens_ids[0] # TODO
+        return self.tokenizer.additional_special_tokens_ids[0] 
     def get_pad_token(self):
-        return "<|pert_mask|>" # TODO
+        return "<|pert_mask|>" 
