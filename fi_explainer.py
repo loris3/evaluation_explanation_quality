@@ -60,6 +60,13 @@ class FI_Explainer(ABC):
         sha256.update(document.encode('utf-8'))
         exp_hash = sha256.hexdigest()
         return str(exp_hash)+"_"+self.__class__.__name__+"_"+self.detector.__class__.__name__
+    def is_cached(self, document, cache_dir="./explanation_cache"):
+        if not os.path.exists(cache_dir):
+            os.mkdir(cache_dir)
+      
+        path = os.path.join(cache_dir,self.get_hash(document)+".pkl")
+       # print(path)
+        return os.path.isfile(path)
     @abstractmethod     
     def as_list(self, exp, label=0):
         pass

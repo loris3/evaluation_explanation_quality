@@ -18,15 +18,16 @@ class DetectorGuo(Detector):
         self.model = self.model.to(self.device)
 
     # inference ignoring masked get_pad_token
-    def predict_proba(self, texts):
+    def predict_proba(self, texts, deterministic=True):
      #   print(texts)
         # print(type(texts))
         # if type(texts) is not list:
         #     texts = [texts]
         results = []
         for text in texts:  
-            np.random.seed(42)
-            torch.manual_seed(42) 
+            if deterministic:
+              np.random.seed(42)
+              torch.manual_seed(42) 
 
             tokens = self.tokenizer.encode(text)
            # all_tokens = len(tokens)

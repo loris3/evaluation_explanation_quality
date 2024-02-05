@@ -6,11 +6,11 @@ class Detector(ABC):
         pass
     @abstractmethod
     # out[0]: p(machine), out[1]: p(human)
-    def predict_proba(self, texts):
+    def predict_proba(self, texts, deterministic=True):
         pass
     # returns 0 if machine is more likely, 1 if human more likely
-    def predict_label(self, texts):
-        r = self.predict_proba(texts).argmax(axis=1)
+    def predict_label(self, texts, deterministic=True):
+        r = self.predict_proba(texts, deterministic=True).argmax(axis=1)
         return r
 
     @abstractmethod

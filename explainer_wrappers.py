@@ -19,7 +19,7 @@ class LIME_Explainer(FI_Explainer):
         self.num_features = num_features
 
 
-        self.num_samples = 1000 if not isinstance(detector, DetectorDetectGPT) else 100
+        self.num_samples = 1000 if not isinstance(detector, DetectorDetectGPT) else 500
 
 
         self.detector = detector #detector_class()
@@ -169,11 +169,10 @@ class SHAP_Explainer(FI_Explainer):
 
 
         self.masker = shap.maskers.Text(self.custom_tokenizer, mask_token=self.detector.get_pad_token())
-        if isinstance(detector, DetectorDetectGPT):
 
-            self.explainer = shap.Explainer(self.detector.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=42, algorithm="partition", max_evals=100)
-        else:
-            self.explainer = shap.Explainer(self.detector.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=42, algorithm="partition") # default max_evals is 500
+        predict_proba = lambda x: self.detector.predict_proba(x, deterministic=False)
+
+        self.explainer = shap.Explainer(predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=42, algorithm="partition") # default max_evals is 500
 
     def tokenize(self, document):
         return self.masker.data_transform(document)[0]
