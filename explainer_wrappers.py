@@ -26,8 +26,11 @@ class LIME_Explainer(FI_Explainer):
         self.explainer = LimeTextExplainer(class_names=["machine", "human"], bow=False, split_expression= r"\s",mask_string=self.detector.get_pad_token()) # TODO
    
         self.splitter = re.compile(r'(%s)|$' % self.explainer.split_expression) # for tokenize()
-    def get_explanation(self, document):
-        self.explainer.random_state = check_random_state(42) 
+    def get_explanation(self, document, alt=""):
+        if alt == "":
+            self.explainer.random_state = check_random_state(42) 
+        else:
+            self.explainer.random_state = check_random_state(int(alt.split("_")[-2])) 
         return self.explainer.explain_instance(document, self.detector.predict_proba, num_features=self.num_features, num_samples=self.num_samples, labels=[0,1],) # labels=0,1 as the detectors can technically be multi class
     def get_fi_scores(self, document, fill=False):
         fi_scores = self.get_explanation_cached(document).as_map()
@@ -170,16 +173,18 @@ class SHAP_Explainer(FI_Explainer):
 
         self.masker = shap.maskers.Text(self.custom_tokenizer, mask_token=self.detector.get_pad_token())
 
-        predict_proba = lambda x: self.detector.predict_proba(x, deterministic=False)
+        self.predict_proba = lambda x: self.detector.predict_proba(x, deterministic=False)
 
-        self.explainer = shap.Explainer(predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=42, algorithm="partition") # default max_evals is 500
+        self.explainer = shap.Explainer(self.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=42, algorithm="partition")
 
     def tokenize(self, document):
         return self.masker.data_transform(document)[0]
     def untokenize(self, tokens):
         return "".join(tokens)
 
-    def get_explanation(self, document):
+    def get_explanation(self, document, alt=""):
+        if alt != "":
+            self.explainer = shap.Explainer(self.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=int(alt.split("_")[-2]), algorithm="partition")
         return self.explainer([document])
     def get_fi_scores(self, document, fill=False):
         # fill by default
@@ -240,7 +245,9 @@ class Anchor_Explainer(FI_Explainer):
         return [x.text_with_ws for x in processed] # Note: words are technically capped to dtype='<U80'
     def untokenize(self, tokens):
         raise NotImplementedError
-    def get_explanation(self, document):
+    def get_explanation(self, document, alt=""):
+        if alt != "":
+            raise NotImplementedError
         np.random.seed(42)
         torch.manual_seed(42) 
         return self.explainer.explain_instance(document, self.detector.predict_label, 

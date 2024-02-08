@@ -35,36 +35,36 @@ class FI_Explainer(ABC):
        # print(path)
         if os.path.isfile(path):
             os.remove(path)
-    def does_explanation_exist(self, document, cache_dir="./explanation_cache"):
-        sha256 = hashlib.sha256()
-        sha256.update(document.encode('utf-8'))
-        exp_hash = sha256.hexdigest()
-        path = os.path.join(cache_dir,str(exp_hash)+"_"+self.__class__.__name__+"_"+self.detector.__class__.__name__+".pkl")
-        return os.path.isfile(path)
-    def get_explanation_cached(self, document, cache_dir="./explanation_cache"):
+    # def does_explanation_exist(self, document, alt="", cache_dir="./explanation_cache"):
+    #     sha256 = hashlib.sha256()
+    #     sha256.update(document.encode('utf-8'))
+    #     exp_hash = sha256.hexdigest()
+    #     path = os.path.join(cache_dir,str(exp_hash)+"_"+self.__class__.__name__+"_"+self.detector.__class__.__name__+".pkl")
+    #     return os.path.isfile(path)
+    def get_explanation_cached(self, document, alt="", cache_dir="./explanation_cache"):
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
       
-        path = os.path.join(cache_dir,self.get_hash(document)+".pkl")
+        path = os.path.join(cache_dir,self.get_hash(document, alt)+".pkl")
        # print(path)
         if os.path.isfile(path):
             return pickle.load(open(path,'rb'))
         else:
           #  print("regen", document)
-            e = self.get_explanation(document)
+            e = self.get_explanation(document, alt="")
 
             pickle.dump(e, open(path,'wb'))
             return e
-    def get_hash(self, document):
+    def get_hash(self, document, alt=""):
         sha256 = hashlib.sha256()
         sha256.update(document.encode('utf-8'))
         exp_hash = sha256.hexdigest()
-        return str(exp_hash)+"_"+self.__class__.__name__+"_"+self.detector.__class__.__name__
-    def is_cached(self, document, cache_dir="./explanation_cache"):
+        return alt+str(exp_hash)+"_"+self.__class__.__name__+"_"+self.detector.__class__.__name__
+    def is_cached(self, document, alt="", cache_dir="./explanation_cache"):
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
       
-        path = os.path.join(cache_dir,self.get_hash(document)+".pkl")
+        path = os.path.join(cache_dir,self.get_hash(document, alt=alt)+".pkl")
        # print(path)
         return os.path.isfile(path)
     @abstractmethod     
@@ -81,4 +81,7 @@ class FI_Explainer(ABC):
         pass
     @abstractmethod
     def untokenize(self, tokens):
+        pass
+    @abstractmethod
+    def get_explanation(document, alt=""):
         pass
