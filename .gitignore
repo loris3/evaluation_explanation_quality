@@ -21,3 +21,5 @@ models/t5-small-decoder.onnx
 models/t5-small-init-decoder.onnx
 explanation_cache
 export
+figures
+tables
