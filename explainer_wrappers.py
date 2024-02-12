@@ -4,7 +4,7 @@ from lime.lime_text import LimeTextExplainer, TextDomainMapper
 import re
 import os
 import numpy as np
-from lime.explanation import id_generator
+
 from sklearn.utils import check_random_state
 import matplotlib.pyplot as plt
 import base64
@@ -51,6 +51,7 @@ class LIME_Explainer(FI_Explainer):
         return " ".join(tokens)
     # shortened version of as_html() without the barplots for TextExplainer
     # always explains with machine as reference (blue - orange + FI for machine)
+    # uses self.get_hash(document) as HTML DOM ids as the default random id_generator won't work if setting seed for each document
     def get_highlighted_text_HTML(self, document):
             explanation = self.get_explanation_cached(document)
             bundle = open(os.path.join("lime/lime/bundle.js"),
@@ -58,7 +59,8 @@ class LIME_Explainer(FI_Explainer):
             out = u'''<html>
                     <meta http-equiv="content-type" content="text/html; charset=UTF8">
                     <head><script>%s </script></head><body>''' % bundle
-            random_id = id_generator(size=15, random_state=check_random_state(self.explainer.random_state)) # done in LIME
+            # the old id is unsuited if setting seed, use the document hash instead
+            random_id = self.get_hash(document)# id_generator(size=15, random_state=check_random_state(self.explainer.random_state)) # done in LIME
             out += u'''
             <div class="lime top_div" id="top_div%s"></div>
             ''' % random_id
@@ -182,7 +184,7 @@ class SHAP_Explainer(FI_Explainer):
     def untokenize(self, tokens):
         return "".join(tokens)
 
-    def get_explanation(self, document, alt=""):
+    def get_explanation(self, document, alt=""): # note that SHAP breaks if setting seed again here TODO explain
         if alt != "":
             self.explainer = shap.Explainer(self.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=int(alt.split("_")[-2]), algorithm="partition")
         return self.explainer([document])
@@ -226,7 +228,7 @@ class SHAP_Explainer(FI_Explainer):
         return shap.plots.text(self.get_explanation_cached(document)[0,:,0],display=False)
 import sys
 sys.path.insert(0, '.') # force the use of local package
-
+import json
 from thesis.anchor.anchor import anchor_text
 from thesis.anchor.anchor import anchor_explanation
 import spacy
@@ -262,7 +264,7 @@ class Anchor_Explainer(FI_Explainer):
                                     max_anchor_size=10, # to limit runtime to 5 min @ 200 samples per len(anchor) from 1 to 10 
                                    #     stop_on_first=True, # default True (for text, hardcoded)
                                     coverage_samples=1, # default 1 (for text, hardcoded, argument added back in in this fork for debugging)
-                                    verbose=False,
+                                    verbose=True,
                                     max_samples_lucb=200, # new argument, limits number of samples used in lucb for each len(anchor) in [1,max_anchor_size]. Does not affect the search for "the best of each size" when failing to find an anchor with the required treshold.
         )
     def get_fi_scores(self, document, fill=False):
@@ -273,6 +275,57 @@ class Anchor_Explainer(FI_Explainer):
         raise NotImplementedError
     def get_barplots_HTML(self, document):
         raise NotImplementedError
+    # Note that this uses a fork of Anchor that changes some things in the js files, run npm build to get a new bundle.js!
     def get_highlighted_text_HTML(self, document):
         exp = self.get_explanation_cached(document)
-        return anchor_explanation.AnchorExplanation('text', exp, self.explainer.as_html).as_html()
+        # as with LIME, use self.get_hash(document) as HTML DOM ids as the default random id_generator won't work if setting seed for each document
+        return anchor_explanation.AnchorExplanation('text', exp, self.explainer.as_html).as_html(hash=self.get_hash(document))
+    
+
+class Random_Explainer(FI_Explainer):
+    def __init__(self, detector, seed=42):
+        self.seed = seed
+        self.split_expression = r"\s"
+        self.splitter = re.compile(r'(%s)|$' % self.split_expression) # for tokenize()
+
+        self.detector = detector # not used here but by experiments (to write dfs)
+    def get_explanation_cached(self, document, alt="", cache_dir="./explanation_cache"):
+        return self.get_explanation(document) # do not cache
+    def get_explanation(self, document, alt=""):
+        tokenized = self.tokenize(document)
+        # set the seed to something predictable: first 8 chars of sha256 hash as int - seed; first 8 chars because np.random.seed requests < 2**32
+        if alt!="":
+            raise NotImplementedError # just re-instantiate the class with a new seed
+        
+        np.random.seed(int(self.get_hash(document, alt=alt).split("_")[0][0:7],16) - self.seed)
+
+        sign = 1 if np.random.rand(1)[0] >= 0.5 else -1
+        fi_scores_machine = sign * np.random.rand(len(tokenized))
+        fi_scores_human = -fi_scores_machine
+        return (tokenized, {0: list(enumerate(fi_scores_machine)), 1: list(enumerate(fi_scores_human))})
+
+    def get_fi_scores(self, document, fill=False):
+        return self.get_explanation_cached(document)[1]
+        
+
+    def get_fi_scores_batch(self, documents):
+        return [self.get_fi_scores(document) for document in tqdm(documents, desc="Generating explanations")]
+    
+    def tokenize(self, document):
+        return [s for s in self.splitter.split(document) if s and s!= " "] # as in LIME source 
+    
+    def untokenize(self, tokens):
+        return " ".join(tokens)
+
+    def get_highlighted_text_HTML(self, document):
+            raise NotImplementedError
+   
+    def get_barplots_HTML(self, document):
+        raise NotImplementedError
+
+
+    def get_vanilla_visualization_HTML(self, document):
+        raise NotImplementedError
+    def as_list(self, exp, label=0):
+        label = int(label) # TODO hotfix
+        return [(word, fi[1]) for word,fi in zip(exp[0], exp[1][label])]

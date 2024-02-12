@@ -10,7 +10,7 @@ class Detector(ABC):
         pass
     # returns 0 if machine is more likely, 1 if human more likely
     def predict_label(self, texts, deterministic=True):
-        r = self.predict_proba(texts, deterministic=True).argmax(axis=1)
+        r = self.predict_proba(texts, deterministic=deterministic).argmax(axis=1)
         return r
 
     @abstractmethod
