@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 class Detector(ABC):
     @abstractmethod
-    def  __init__(self):
+    def  __init__(self, metdata_only=False):
         pass
     @abstractmethod
     # out[0]: p(machine), out[1]: p(human)
