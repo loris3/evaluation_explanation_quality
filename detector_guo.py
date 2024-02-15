@@ -7,15 +7,15 @@ import torch
 import numpy as np
 
 class DetectorGuo(Detector):
-    def __init__(self):
+    def __init__(self, metadata_only=False):
+        if not metadata_only:
+          self.device= 'cuda' if torch.cuda.is_available() else 'cpu'
+        
+          self.model = AutoModelForSequenceClassification.from_pretrained("Hello-SimpleAI/chatgpt-detector-roberta")
 
-        self.device= 'cuda' if torch.cuda.is_available() else 'cpu'
-       
-        self.model = AutoModelForSequenceClassification.from_pretrained("Hello-SimpleAI/chatgpt-detector-roberta")
-
-        self.tokenizer = AutoTokenizer.from_pretrained("Hello-SimpleAI/chatgpt-detector-roberta", additional_special_tokens=["<|pert_mask|>"])
-        self.model.eval()
-        self.model = self.model.to(self.device)
+          self.tokenizer = AutoTokenizer.from_pretrained("Hello-SimpleAI/chatgpt-detector-roberta", additional_special_tokens=["<|pert_mask|>"])
+          self.model.eval()
+          self.model = self.model.to(self.device)
 
     # inference ignoring masked get_pad_token
     def predict_proba(self, texts, deterministic=True):
