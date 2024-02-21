@@ -20,10 +20,6 @@ class FI_Explainer(ABC):
     @abstractmethod
     def tokenize(self, document, collapse_whitespace=True):
         pass
-    @abstractmethod
-    def get_vanilla_visualization_HTML(self, document):
-        pass
-    
     def get_explanations_cached(self, documents, cache_dir="./explanation_cache"):
         return [self.get_explanation_cached(document, cache_dir) for document in documents]
 
@@ -71,13 +67,7 @@ class FI_Explainer(ABC):
     def as_list(self, exp, label=0):
         pass
     @abstractmethod
-    def get_barplots_HTML(self, document):
-        pass
-    @abstractmethod
-    def get_vanilla_visualization_HTML(self, document):
-        pass
-    @abstractmethod
-    def get_highlighted_text_HTML(self, document):
+    def get_HTML(self, document):
         pass
     @abstractmethod
     def untokenize(self, tokens):

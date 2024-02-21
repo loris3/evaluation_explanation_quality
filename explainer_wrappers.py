@@ -9,7 +9,6 @@ from sklearn.utils import check_random_state
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
-from detectgpt.detector_detectgpt import DetectorDetectGPT
 
 from tqdm import tqdm
 
@@ -19,8 +18,7 @@ class LIME_Explainer(FI_Explainer):
         self.num_features = num_features
 
 
-        self.num_samples = 1000 if not isinstance(detector, DetectorDetectGPT) else 500
-
+        self.num_samples = 1000 
 
         self.detector = detector #detector_class()
         self.explainer = LimeTextExplainer(class_names=["machine", "human"], bow=False, split_expression= r"\s",mask_string=self.detector.get_pad_token()) # TODO
@@ -49,27 +47,59 @@ class LIME_Explainer(FI_Explainer):
     #        ==> LIME is cannot be faithful if presence/absence of repeated split_expressions are a feature  
     def untokenize(self, tokens):
         return " ".join(tokens)
-    # shortened version of as_html() without the barplots for TextExplainer
+    # shortened version of as_html() in explanation.py
     # always explains with machine as reference (blue - orange + FI for machine)
-    # uses self.get_hash(document) as HTML DOM ids as the default random id_generator won't work if setting seed for each document
-    def get_highlighted_text_HTML(self, document):
+    # uses self.get_hash(document) as HTML DOM ids as the default random id_generator won't work as intended if setting seed for each document (leads to collisions when put in the same HTML document)
+    def get_HTML(self, document, bundle=True):
+            labels = [0,1]
+            def jsonize(x):
+                return json.dumps(x, ensure_ascii=False)
+    
             explanation = self.get_explanation_cached(document)
+            
+           
             bundle = open(os.path.join("lime/lime/bundle.js"),
                             encoding="utf8").read()
-            out = u'''<html>
+            
+            random_id = self.get_hash(document)# id_generator(size=15, random_state=check_random_state(self.explainer.random_state)) # in LIME
+            out = ""
+            if bundle:
+                out = u'''<html>
                     <meta http-equiv="content-type" content="text/html; charset=UTF8">
                     <head><script>%s </script></head><body>''' % bundle
+            else:
+                out = u'''<html>
+                        <meta http-equiv="content-type" content="text/html; charset=UTF8">
+                        <body>
+                    '''
             # the old id is unsuited if setting seed, use the document hash instead
-            random_id = self.get_hash(document)# id_generator(size=15, random_state=check_random_state(self.explainer.random_state)) # done in LIME
-            out += u'''
-            <div class="lime top_div" id="top_div%s"></div>
-            ''' % random_id
+            out += '''<div class="lime top_div" id="top_div%s"></div>
+                        
+                        ''' % random_id
 
-            exp_js = 'var exp_div;\n        var exp = new lime.Explanation(["machine", "human"]);\n' # only effects number of labels so that color is static
+
+            exp_js = '''var exp_div;
+            var exp = new lime.Explanation(%s);
+        ''' % (jsonize([str(x) for x in explanation.class_names]))
+           
+            # ############### barchart
+            # tokens, fi_scores = zip(*explanation.as_list(1))
+            # exp = jsonize(list(zip(tokens, np.interp(fi_scores,[np.min(fi_scores), np.max(fi_scores)],[-1,1])))) # 1 is default
+            exp = jsonize(explanation.as_list(1))
+            exp_js += u'''
+            exp_div = top_div.append('div').classed('lime explanation', true);
+            exp.show(%s, %d, exp_div);
+            ''' % (exp, 1)
+
+            # ###############           
+           
+           
+           
+           
             raw_js = '''var raw_div = top_div.append('div');'''
             raw_js += explanation.domain_mapper.visualize_instance_html(
-                            explanation.local_exp[0],
-                            0,
+                            explanation.local_exp[1],
+                            1,
                             'raw_div',
                             'exp')
             out += u'''
@@ -80,79 +110,10 @@ class LIME_Explainer(FI_Explainer):
             %s
             %s
             </script>
-            ''' % (random_id, "", "", exp_js, raw_js)
+            ''' % (random_id, "","", exp_js, raw_js)
             out += u'</body></html>'
             return out
-     # adapts LIME internal .as_pyplot() and returns two HTML strings
-    def get_barplots_HTML(self, document):
-        plt.ioff()
 
-        explanation = self.get_explanation_cached(document)
-        fig = plt.figure()
-        exp = explanation.as_list(label=0)
-        fig = plt.figure()
-        vals = [x[1] for x in exp]
-        names = [x[0] for x in exp]
-        vals.reverse()
-        names.reverse()
-        colors = ['orange' if x > 0 else 'blue' for x in vals]
-        pos = np.arange(len(exp)) + .5
-        plt.barh(pos, vals, align='center', color=colors)
-
-        all_fi_scores = [x[1] for xs in explanation.as_map().values() for x in xs]
-
-        plt.xlim(min(all_fi_scores), max(all_fi_scores))
-        plt.yticks(pos, names)
-
-        plt.suptitle("let f(x) = machine",fontsize=16, y=1)
-        plt.title("decreases confidence | increases confidence")
-        # https://stackoverflow.com/questions/48717794/matplotlib-embed-figures-in-auto-generated-html
-        tmpfile = BytesIO()
-        fig.savefig(tmpfile, format='png')
-        encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
-
-        barplot_machine = '<img src=\'data:image/png;base64,{}\'>'.format(encoded)
-
-
-
-        exp = explanation.as_list(label=1)
-        fig = plt.figure()
-        vals = [x[1] for x in exp]
-        names = [x[0] for x in exp]
-        vals.reverse()
-        names.reverse()
-        colors = ['green' if x > 0 else 'red' for x in vals]
-        pos = np.arange(len(exp)) + .5
-        plt.barh(pos, vals, align='center', color=colors)
-
-
-        plt.xlim(min(all_fi_scores), max(all_fi_scores))
-        plt.yticks(pos, names)
-
-        title = 'Local explanation for class %s' % explanation.class_names[1]
-
-        plt.suptitle("let f(x) = human",fontsize=16, y=1)
-        plt.title("decreases confidence | increases confidence")
-
-        # https://stackoverflow.com/questions/48717794/matplotlib-embed-figures-in-auto-generated-html
-        tmpfile = BytesIO()
-        fig.savefig(tmpfile, format='png');
-        encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
-
-        barplot_human = '<img src=\'data:image/png;base64,{}\'>'.format(encoded)
-        
-        return barplot_machine, barplot_human
-
-
-    def get_vanilla_visualization_HTML(self, document):
-        explanation = self.get_explanation_cached(document )
-
-        # LIME shows the barplots in order of "top_labels", i.e. machine first if prediction is machine, human first if prediction is human
-        # orange is positive FI scores for top_lablel, blue negative FI scores
-        # This is desirable for multiclass problems (when using top_labels=n)
-        # But really confusing here. 
-        # labels=[0,1]  --> Fix order: always show machine first, always use machine as reference for text plot
-        return explanation.as_html(labels=[0,1], predict_proba=False) 
     def as_list(self, exp, label=0):
         return exp.as_list(label=label)
 
@@ -199,33 +160,12 @@ class SHAP_Explainer(FI_Explainer):
     def get_fi_scores_batch(self, documents):
         return [self.get_fi_scores(document) for document in tqdm(documents, desc="Generating explanations")]
     
-    def get_vanilla_visualization_HTML(self, document):
-        explanation = self.get_explanation_cached(document)
-        return shap.plots.text(explanation, display=False)
     def as_list(self, exp, label=0):
         label = int(label) # TODO hotfix
         return [(word, fi) for word,fi in zip(exp.data[0], exp.values[0,:,label])]
-    # TODO duplicate code
-    def get_barplots_HTML(self, document):
-        plt.ioff()
-        fig = plt.figure()
-        _ = shap.plots.bar(self.get_explanation_cached(document)[0,:,0], show=False)
-        tmpfile = BytesIO()
-        fig.savefig(tmpfile, format='png');
-        encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
-        barplot_machine = '<img src=\'data:image/png;base64,{}\'>'.format(encoded)
 
-        fig = plt.figure()
-        _ = shap.plots.bar(self.get_explanation_cached(document)[0,:,1], show=False)
-        tmpfile = BytesIO()
-        fig.savefig(tmpfile, format='png');
-        encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
-        barplot_human = '<img src=\'data:image/png;base64,{}\'>'.format(encoded)
-
-        return barplot_machine, barplot_human
-    def get_highlighted_text_HTML(self, document):
-
-        return shap.plots.text(self.get_explanation_cached(document)[0,:,0],display=False)
+    def get_HTML(self, document, bundle=True):
+        return shap.plots.text(self.get_explanation_cached(document)[0,:,0],display=False, xmin=-0.5, xmax=1.5)
 import sys
 sys.path.insert(0, '.') # force the use of local package
 import json
@@ -267,19 +207,15 @@ class Anchor_Explainer(FI_Explainer):
                                     verbose=True,
                                     max_samples_lucb=200, # new argument, limits number of samples used in lucb for each len(anchor) in [1,max_anchor_size]. Does not affect the search for "the best of each size" when failing to find an anchor with the required treshold.
         )
-    def get_fi_scores(self, document, fill=False):
-        raise NotImplementedError
-    def get_vanilla_visualization_HTML(self, document):
-        raise NotImplementedError
     def as_list(self, exp, label=0):
         raise NotImplementedError
-    def get_barplots_HTML(self, document):
+    def get_fi_scores(self, document, fill=False):
         raise NotImplementedError
     # Note that this uses a fork of Anchor that changes some things in the js files, run npm build to get a new bundle.js!
-    def get_highlighted_text_HTML(self, document):
+    def get_HTML(self, document, bundle=True):
         exp = self.get_explanation_cached(document)
         # as with LIME, use self.get_hash(document) as HTML DOM ids as the default random id_generator won't work if setting seed for each document
-        return anchor_explanation.AnchorExplanation('text', exp, self.explainer.as_html).as_html(hash=self.get_hash(document))
+        return anchor_explanation.AnchorExplanation('text', exp, self.explainer.as_html).as_html(hash=self.get_hash(document), bundle=bundle)
     
 
 class Random_Explainer(FI_Explainer):

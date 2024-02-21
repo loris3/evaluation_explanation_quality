@@ -4,23 +4,28 @@ from detector_base.detector import Detector
 import numpy as np
 
 class DetectorDummy(Detector):
-    def __init__(self, machine_watermark="machine", human_watermark="human"):
+    def __init__(self, machine_watermark="an", human_watermark="example"):
       self.machine_watermark = machine_watermark
       self.human_watermark = human_watermark
 
     # inference ignoring masked get_pad_token
-    def predict_proba(self, texts):
+    def predict_proba(self, texts, deterministic=True):
      
         results = []
         for text in texts:
-          np.random.seed(42)
           offset = np.random.uniform(0.001, 0.01)
         #  print(self.human_watermark in text, text)
-          if (self.machine_watermark in text):
-            if np.random.uniform(0, 1) <= 0.8:
-              results.append( np.array([1, 0]))
-            else:
-              results.append( np.array([0,1]))
+          if "an" in text and not("example" in text and "This" in text and "is" in text):
+            results.append( np.array([0.9-offset,0.1+offset]))
+          elif "example" in text or "is" in text:
+            results.append( np.array([0.1-offset,0.9+offset]))
+          elif "This" in text and "is" in text:
+            results.append( np.array([0.4-offset,0.6+offset]))
+          elif "This" in text:
+            results.append( np.array([0.1-offset,0.9+offset]))
+          elif "This" in text:
+            results.append( np.array([0.5-offset,0.5+offset]))
+
           else:
              results.append( np.array([0.5-offset,0.5+offset]))
           # if (self.machine_watermark in text) and (self.human_watermark in text):

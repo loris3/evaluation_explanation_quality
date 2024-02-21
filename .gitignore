@@ -23,3 +23,6 @@ explanation_cache
 export
 figures
 tables
+dataset_user_study*
+*.db
+*.csv

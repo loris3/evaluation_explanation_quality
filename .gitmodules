@@ -13,3 +13,6 @@
 [submodule "anchor"]
 	path = anchor
 	url = https://github.com/loris3/anchor
+[submodule "survey"]
+	path = survey
+	url = https://github.com/loris3/survey
