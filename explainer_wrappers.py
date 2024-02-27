@@ -9,6 +9,7 @@ from sklearn.utils import check_random_state
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
+from detectgpt.detector_detectgpt import DetectorDetectGPT
 
 from tqdm import tqdm
 
@@ -18,7 +19,8 @@ class LIME_Explainer(FI_Explainer):
         self.num_features = num_features
 
 
-        self.num_samples = 1000 
+        self.num_samples = 1000 if not isinstance(detector, DetectorDetectGPT) else 500 # DetectGPT: 1500s for 1 explanation @ 1k is too much
+
 
         self.detector = detector #detector_class()
         self.explainer = LimeTextExplainer(class_names=["machine", "human"], bow=False, split_expression= r"\s",mask_string=self.detector.get_pad_token()) # TODO

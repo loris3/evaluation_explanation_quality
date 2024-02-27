@@ -1,11 +1,11 @@
 from nltk.tokenize import sent_tokenize, word_tokenize
 import numpy as np
-
-
+from explainer_wrappers import Anchor_Explainer
+from IPython.core.display import display, HTML
 # create hybrid documents as proposed by Poerner et al.:
 # sentence_tokenizer is common for all explanaiton methods so that the input to the detectors is the same. This is verified in an assert in the notebook
 # word_tokenizer: use the same splitting/indexing method that the explanation method uses for easy calculation of the pointing game accuracy.
-def hybrid(documents, labels, lenght = 10 , word_tokenizer=word_tokenize):
+def hybrid(documents, labels, lenght = 6 , word_tokenizer=word_tokenize):
     hybrid_documents = []
     tokenized_hybrid_documents = []
     GT = []
@@ -28,22 +28,30 @@ def hybrid(documents, labels, lenght = 10 , word_tokenizer=word_tokenize):
         GT.append(np.array(hybrid_labels))
     return hybrid_documents, tokenized_hybrid_documents, GT
 
-def get_pointing_game_acc(hybrid_documents, explainer, predictions_hybrid, GT):
-    fi_scores = explainer.get_fi_scores_batch(hybrid_documents)
-    
-    # for each <explanation on a hybrid document> get the index of the top word by FI FOR THE PREDICTED CLASS.
-    # in the notation of Poerner et al.:
-    #                   ---------------------------
-    #                   ---------rmax(X,phi)-------------------------------
-    #                                   ---f(X)---           
-    indices_top_word = [max(explanation[prediction], key=lambda x: x[1])[0] for explanation, prediction in zip(fi_scores, predictions_hybrid)] 
+
+# as get_pointing_game_acc but returns the score for each document for a ttest
+def get_pointing_game_scores(hybrid_documents, explainer, predictions_hybrid, GT):
+    if(isinstance(explainer, Anchor_Explainer)):
+        pointing_game_scores = []
+        for document, gt in zip(hybrid_documents, GT):
+            explanation = explainer.get_explanation_cached(document)
+            positions = [x.idx for x in explainer.explainer.nlp(document)] # to resolve ids provided by explanation["positions"]
+            assert len(positions) == len(gt)
+            assert max(explanation["mean"]) == explanation["mean"][-1] # the next line assumes the longest anchor is the one with the highest precision
+            pointing_game_scores.append(sum([int(gt[positions.index(p)] == explanation["prediction"]) for p in explanation["positions"]]) / len(explanation["positions"]))
+    else:
+        fi_scores = explainer.get_fi_scores_batch(hybrid_documents)
+        
+        # for each <explanation on a hybrid document> get the index of the top word by FI FOR THE PREDICTED CLASS.
+        # in the notation of Poerner et al.:
+        #                   ---------------------------
+        #                   ---------rmax(X,phi)-------------------------------
+        #                                   ---f(X)---           
+        indices_top_word = [max(explanation[prediction], key=lambda x: x[1])[0] for explanation, prediction in zip(fi_scores, predictions_hybrid)] #  key=lambda x: x[1]: fi score for token; ...[0]: idx of token
 
 
-    # now test for all rmax(X,phi) wether f(X,rmax(X,phi)) == f(X), i.e. the top word originates from "a document with the correct gold label"  
-    # pointing_game_acc = ---------------------- number of hits ---------------------------------------------------------------------------------------------------   / possible hits
-    #                         a list of booleans: 1 if the class of the top word (=prediction_hybrid by definition) matches the GT
-    pointing_game_acc = sum([GT_doc[idx_top_word] == prediction_hybrid for idx_top_word, GT_doc, prediction_hybrid in zip(indices_top_word,GT, predictions_hybrid)]) / len(hybrid_documents)
-    return pointing_game_acc
-
-
-
+        # now test for all rmax(X,phi) wether f(X,rmax(X,phi)) == f(X), i.e. the top word originates from "a document with the correct gold label"  
+        # pointing_game_acc = ---------------------- number of hits ---------------------------------------------------------------------------------------------------   / possible hits
+        #                         a list of booleans: 1 if the class of the top word (=prediction_hybrid by definition) matches the GT
+        pointing_game_scores = [int(GT_doc[idx_top_word] == prediction_hybrid) for idx_top_word, GT_doc, prediction_hybrid in zip(indices_top_word,GT, predictions_hybrid)]
+    return pointing_game_scores
