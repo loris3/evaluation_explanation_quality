@@ -234,7 +234,6 @@ class Random_Explainer(FI_Explainer):
         # set the seed to something predictable: first 8 chars of sha256 hash as int - seed; first 8 chars because np.random.seed requests < 2**32
         if alt!="":
             raise NotImplementedError # just re-instantiate the class with a new seed
-        
         np.random.seed(int(self.get_hash(document, alt=alt).split("_")[0][0:7],16) - self.seed)
 
         sign = 1 if np.random.rand(1)[0] >= 0.5 else -1
@@ -258,7 +257,7 @@ class Random_Explainer(FI_Explainer):
     def get_highlighted_text_HTML(self, document):
             raise NotImplementedError
    
-    def get_barplots_HTML(self, document):
+    def get_HTML(self, document, bundle=True):
         raise NotImplementedError
 
 

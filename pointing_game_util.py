@@ -1,7 +1,7 @@
 from nltk.tokenize import sent_tokenize, word_tokenize
 import numpy as np
 from explainer_wrappers import Anchor_Explainer
-from IPython.core.display import display, HTML
+from tqdm import tqdm
 # create hybrid documents as proposed by Poerner et al.:
 # sentence_tokenizer is common for all explanaiton methods so that the input to the detectors is the same. This is verified in an assert in the notebook
 # word_tokenizer: use the same splitting/indexing method that the explanation method uses for easy calculation of the pointing game accuracy.
@@ -33,7 +33,7 @@ def hybrid(documents, labels, lenght = 6 , word_tokenizer=word_tokenize):
 def get_pointing_game_scores(hybrid_documents, explainer, predictions_hybrid, GT):
     if(isinstance(explainer, Anchor_Explainer)):
         pointing_game_scores = []
-        for document, gt in zip(hybrid_documents, GT):
+        for document, gt in tqdm(list(zip(hybrid_documents, GT))):
             explanation = explainer.get_explanation_cached(document)
             positions = [x.idx for x in explainer.explainer.nlp(document)] # to resolve ids provided by explanation["positions"]
             assert len(positions) == len(gt)
