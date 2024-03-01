@@ -9,7 +9,7 @@ from sklearn.utils import check_random_state
 import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
-from detectgpt.detector_detectgpt import DetectorDetectGPT
+from detector_detectgpt import DetectorDetectGPT
 
 from tqdm import tqdm
 
