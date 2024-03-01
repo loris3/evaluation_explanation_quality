@@ -7,3 +7,6 @@
 [submodule "survey"]
 	path = survey
 	url = https://github.com/loris3/survey
+[submodule "transformers"]
+	path = transformers
+	url = https://github.com/huggingface/transformers
