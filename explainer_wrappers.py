@@ -188,7 +188,7 @@ class Anchor_Explainer(FI_Explainer):
         processed = self.explainer.nlp(tokenize)
         return [x.text_with_ws for x in processed] # Note: words are technically capped to dtype='<U80'
     def untokenize(self, tokens):
-        raise NotImplementedError
+        return "".join(tokens)
     def get_explanation(self, document, alt=""):
         if alt != "":
             raise NotImplementedError
@@ -210,9 +210,25 @@ class Anchor_Explainer(FI_Explainer):
                                     max_samples_lucb=200, # new argument, limits number of samples used in lucb for each len(anchor) in [1,max_anchor_size]. Does not affect the search for "the best of each size" when failing to find an anchor with the required treshold.
         )
     def as_list(self, exp, label=0):
-        raise NotImplementedError
+        # see get_fi_scores
+        label = int(label) # TODO hotfix
+        # workaround to match signature
+        tokenized = self.tokenize(exp["instance"])
+        assert self.untokenize(tokenized) == exp["instance"] # have to check this somewhere
+        return [(tokenized[id], fi) for id,fi in self.get_fi_scores(exp["instance"])[label]]
+
     def get_fi_scores(self, document, fill=False):
-        raise NotImplementedError
+        # fill by default
+        # ONLY FOR USE WITH TOKEN REMOVAL EXPERIMENTS
+        # maps the precision score to all tokens of the corresponding Anchor
+        # let {this, is, an, example} be an anchor with precision 0.8, then each token part of the anchor is assigned a "fi score" of 0.8, all other tokens are 0
+        # this encoding is so that when running token removal experiments, the tokens of the anchor are removed first as they are considered "important"
+        # only the anchor with the highest precision is considered
+        explanation = self.get_explanation_cached(document)
+        positions = [x.idx for x in self.explainer.nlp(document)] # to resolve ids provided by explanation["positions"]
+        assert max(explanation["mean"]) == explanation["mean"][-1] # the next line assumes the longest anchor is the one with the highest precision
+        scores = [(i, (explanation["precision"][-1] if pos in explanation["positions"] else 0)) for i, pos in enumerate(positions) ]
+        return {0 : scores, 1: [(id, -s) for id, s in scores]} if explanation["prediction"] == 0 else {0 : [(id, -s) for id, s in scores], 1: scores}
     # Note that this uses a fork of Anchor that changes some things in the js files, run npm build to get a new bundle.js!
     def get_HTML(self, document, bundle=True):
         exp = self.get_explanation_cached(document)

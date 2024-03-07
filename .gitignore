@@ -27,3 +27,4 @@ dataset_user_study*
 *.db
 *.csv
 pointing_game_datasets/*
+rendered_datasets_user_study/*
