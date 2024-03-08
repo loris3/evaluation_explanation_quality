@@ -51,7 +51,7 @@ def run_user(idx, user, url, df_user_study):
     requests.post(url+"/api/completeCurrentPhase", json={"expected": 3}, headers=headers)
 
     for doc_nr, row in df_user_documents.iterrows():
-        json_ = {"lickert-q{}-{}".format(question_nr, doc_nr): str(np.random.choice([1,2,3,4,5], p=[0.1,0.1,0.1,0.4,0.3])) for question_nr in range(1,6)}
+        json_ = {"lickert-q{}-{}".format(question_nr, doc_nr): str(np.random.choice([1,2,3,4,5], p=[0.1,0.2,0.1,0.4,0.2])) for question_nr in range(1,4)}
         json_["document_nr"] = doc_nr
         requests.post(url+"/api/submitPhase3", json=json_, headers=headers)
 
