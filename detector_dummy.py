@@ -16,15 +16,15 @@ class DetectorDummy(Detector):
           offset = np.random.uniform(0.001, 0.01)
         #  print(self.human_watermark in text, text)
           if "an" in text and not("example" in text and "This" in text and "is" in text):
-            results.append( np.array([0.9-offset,0.1+offset]))
+            results.append( np.array([0.1+offset,0.9-offset]))
           elif "example" in text or "is" in text:
-            results.append( np.array([0.1-offset,0.9+offset]))
+            results.append( np.array([0.9+offset, 0.1-offset]))
           elif "This" in text and "is" in text:
-            results.append( np.array([0.4-offset,0.6+offset]))
+            results.append( np.array([0.6+offset,0.4-offset]))
           elif "This" in text:
-            results.append( np.array([0.1-offset,0.9+offset]))
+            results.append( np.array([0.9+offset,0.1-offset]))
           elif "This" in text:
-            results.append( np.array([0.5-offset,0.5+offset]))
+            results.append( np.array([0.5+offset, 0.5-offset]))
 
           else:
              results.append( np.array([0.5-offset,0.5+offset]))

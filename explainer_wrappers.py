@@ -32,8 +32,8 @@ class LIME_Explainer(FI_Explainer):
         else:
             self.explainer.random_state = check_random_state(int(alt.split("_")[-2])) 
         return self.explainer.explain_instance(document, self.detector.predict_proba, num_features=self.num_features, num_samples=self.num_samples, labels=[0,1],) # labels=0,1 as the detectors can technically be multi class
-    def get_fi_scores(self, document, fill=False):
-        fi_scores = self.get_explanation_cached(document).as_map()
+    def get_fi_scores(self, document, fill=False, alt=""):
+        fi_scores = self.get_explanation_cached(document, alt=alt).as_map()
         if fill:
             # set all tokens not in top_k to 0
             return {label: [(i,dict(fi_scores[label])[i]) if i in dict(fi_scores[label]) else (i,0) for i, _ in enumerate(self.tokenize(document))] for label,l in fi_scores.items()}
@@ -151,9 +151,9 @@ class SHAP_Explainer(FI_Explainer):
         if alt != "":
             self.explainer = shap.Explainer(self.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=int(alt.split("_")[-2]), algorithm="partition")
         return self.explainer([document])
-    def get_fi_scores(self, document, fill=False):
+    def get_fi_scores(self, document, fill=False, alt=""):
         # fill by default
-        exp = self.get_explanation_cached(document)
+        exp = self.get_explanation_cached(document, alt=alt)
         # reshape to match lime map
         values_machine = exp.values[:,:,0][0]
         values_human = exp.values[:,:,1][0]

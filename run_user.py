@@ -30,10 +30,12 @@ def run_user(idx, user, url, df_user_study):
     "has_seen_OTHERS_before": "yes",
     "level_of_expertise": "is-researcher-explainability",
     "familiarity_with_chatgpt": "occasional-use",
-    "prefers_monochromatic_methods": "yes" if user["access_token"] == "DDEBUG" else "no"
+    "prefers_monochromatic_methods": "yes" if idx % 20 == 0 else "no"
     }, headers=headers)
     # go to phase 2
     requests.post(url+"/api/completeCurrentPhase", json={"expected": 0}, headers=headers)
+    # if idx % 8 == 0:
+    #     return
     requests.post(url+"/api/completeCurrentPhase", json={"expected": 1}, headers=headers)
     requests.post(url+"/api/completeCurrentPhase", json={"expected": 2}, headers=headers)
 
