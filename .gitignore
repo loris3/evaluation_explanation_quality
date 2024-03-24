@@ -19,7 +19,7 @@ h3_splits/en_train.csv
 models/t5-small-encoder.onnx
 models/t5-small-decoder.onnx
 models/t5-small-init-decoder.onnx
-explanation_cache
+explanation_cache/*
 export
 figures
 tables
@@ -28,3 +28,6 @@ dataset_user_study*
 *.csv
 pointing_game_datasets/*
 rendered_datasets_user_study/*
+benchmark_cache
+*copy.ipynb
+*leonardo.ipynb

@@ -27,10 +27,15 @@ class LIME_Explainer(FI_Explainer):
    
         self.splitter = re.compile(r'(%s)|$' % self.explainer.split_expression) # for tokenize()
     def get_explanation(self, document, alt=""):
+        # for the continuity experiments where the explanation method is re-run on the original document:
         if alt == "":
             self.explainer.random_state = check_random_state(42) 
+            self.detector.seed = 42
         else:
-            self.explainer.random_state = check_random_state(int(alt.split("_")[-2])) 
+            seed = int(alt.split("_")[-2])
+            self.detector.seed = seed
+            self.explainer.random_state = check_random_state(seed) 
+            self.detector.seed = seed
         return self.explainer.explain_instance(document, self.detector.predict_proba, num_features=self.num_features, num_samples=self.num_samples, labels=[0,1],) # labels=0,1 as the detectors can technically be multi class
     def get_fi_scores(self, document, fill=False, alt=""):
         fi_scores = self.get_explanation_cached(document, alt=alt).as_map()
@@ -148,8 +153,16 @@ class SHAP_Explainer(FI_Explainer):
         return "".join(tokens)
 
     def get_explanation(self, document, alt=""): # note that SHAP breaks if setting seed again here TODO explain
+        # for the continuity experiments where the explanation method is re-run on the original document:
         if alt != "":
-            self.explainer = shap.Explainer(self.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=int(alt.split("_")[-2]), algorithm="partition")
+            seed=int(alt.split("_")[-2])
+            np.random.seed(seed)
+            torch.manual_seed(seed) 
+            self.detector.seed = seed
+            self.explainer = shap.Explainer(self.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=seed, algorithm="partition")
+        else:
+            self.detector.seed = 42
+            self.explainer = shap.Explainer(self.predict_proba, masker=self.masker, output_names=["machine", "human"], silent=True, seed=42, algorithm="partition")
         return self.explainer([document])
     def get_fi_scores(self, document, fill=False, alt=""):
         # fill by default
@@ -247,18 +260,22 @@ class Random_Explainer(FI_Explainer):
         return self.get_explanation(document) # do not cache
     def get_explanation(self, document, alt=""):
         tokenized = self.tokenize(document)
+        if alt != "":
+            seed=int(alt.split("_")[-2])
+            np.random.seed(int(self.get_hash(document, alt=alt).split("_")[2][0:7],16) - seed)
+        else:
+            seed = self.seed
+            np.random.seed(int(self.get_hash(document, alt=alt).split("_")[0][0:7],16) - seed)
         # set the seed to something predictable: first 8 chars of sha256 hash as int - seed; first 8 chars because np.random.seed requests < 2**32
-        if alt!="":
-            raise NotImplementedError # just re-instantiate the class with a new seed
-        np.random.seed(int(self.get_hash(document, alt=alt).split("_")[0][0:7],16) - self.seed)
+        
 
         sign = 1 if np.random.rand(1)[0] >= 0.5 else -1
         fi_scores_machine = sign * np.random.rand(len(tokenized))
         fi_scores_human = -fi_scores_machine
         return (tokenized, {0: list(enumerate(fi_scores_machine)), 1: list(enumerate(fi_scores_human))})
 
-    def get_fi_scores(self, document, fill=False):
-        return self.get_explanation_cached(document)[1]
+    def get_fi_scores(self, document, fill=False, alt=""):
+        return self.get_explanation(document, alt=alt)[1]
         
 
     def get_fi_scores_batch(self, documents):

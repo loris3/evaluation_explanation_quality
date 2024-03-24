@@ -29,6 +29,7 @@ class DetectorRadford(Detector):
             self.model.load_state_dict(data['model_state_dict'])
             self.model.eval()
             self.model = self.model.to(self.device)
+            self.seed = 42
     @override
     def predict_proba(self, texts, deterministic=True):
         """See base class.
@@ -36,8 +37,8 @@ class DetectorRadford(Detector):
         results = []
         for text in texts:  
             if deterministic:
-                np.random.seed(42)
-                torch.manual_seed(42) 
+                np.random.seed(self.seed)
+                torch.manual_seed(self.seed) 
           
             tokens = self.tokenizer.encode(text)
             tokens = tokens[:self.tokenizer.max_len - 2]

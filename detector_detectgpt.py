@@ -23,7 +23,7 @@ class DetectorDetectGPT(Detector):
             NotImplementedError: Not all functions from the original implementation are used/tested.
         """
         if not metadata_only:
-
+            self.seed = 42
             ### parameters ###
             self.pct_words_masked= 0.3 # percentage of words masked in perturb_texts()
             self.span_length= 2 # how many tokens get masked with a single extra_id_ in tokenize_and_mask()
@@ -125,8 +125,8 @@ class DetectorDetectGPT(Detector):
         if deterministic: # process one document at a time
             result = []
             for text in texts:
-                np.random.seed(42)
-                torch.manual_seed(42) 
+                np.random.seed(self.seed)
+                torch.manual_seed(self.seed) 
 
                 texts_ = self.preprocess([text])
                 perturbation_results = self.get_perturbation_results(self.span_length, self.n_perturbations, texts_)

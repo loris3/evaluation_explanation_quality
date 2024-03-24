@@ -47,7 +47,7 @@ class FI_Explainer(ABC):
             return pickle.load(open(path,'rb'))
         else:
           #  print("regen", document)
-            e = self.get_explanation(document, alt="")
+            e = self.get_explanation(document, alt=alt)
 
             pickle.dump(e, open(path,'wb'))
             return e

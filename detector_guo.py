@@ -21,6 +21,7 @@ class DetectorGuo(Detector):
           self.tokenizer = AutoTokenizer.from_pretrained("Hello-SimpleAI/chatgpt-detector-roberta", additional_special_tokens=["<|pert_mask|>"])
           self.model.eval()
           self.model = self.model.to(self.device)
+          self.seed = 42
 
     @override
     def predict_proba(self, texts, deterministic=True):
@@ -29,8 +30,8 @@ class DetectorGuo(Detector):
         results = []
         for text in texts:  
             if deterministic:
-              np.random.seed(42)
-              torch.manual_seed(42) 
+              np.random.seed(self.seed)
+              torch.manual_seed(self.seed) 
 
             tokens = self.tokenizer.encode(text)
             tokens = tokens[:self.tokenizer.model_max_length - 2]
