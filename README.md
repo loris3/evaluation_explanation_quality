@@ -13,17 +13,26 @@ A collection of experiments to assess the quality of explanations for detectors 
 
 `wget https://openaipublic.azureedge.net/gpt-2/detector-models/v1/detector-base.pt models/radford et al/detector-base.pt`
 
-This detector requires an older version of transformers.
-
-`cd transformers`
-
-`git checkout v2.1.1`
-
-All other modules use a newer version.
-
 **Cache**
 
 Unzip `explanation_cache.zip` to `explanation_cache`. The filenames contain the SHA256 hash of the input string. See `fi_explainer.py`.
+
+**Python**
+
+Create a .venv and activate it.
+
+`pip install -r requirements.txt`
+
+`python -m spacy download en_core_web_sm`
+
+`python -m spacy download en_core_web_lg`
+
+You may want to intall pytorch manually.
+
+Make sure to select the .venv in all notebooks.
+
+**Dataset**
+Run `dataset_sampling.ipynb`. 
 # Detectors
 All detectors are extended to support masked input:
 - In-domain fine-tuned RoBERTa in [Guo et al. 2023](https://arxiv.org/abs/2301.07597): [detector_guo.py](./detector_guo.py)
