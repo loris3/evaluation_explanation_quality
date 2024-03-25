@@ -6,7 +6,7 @@ def run_user(idx, user, url, df_user_study):
 
     mu_got_it_right_pre=0.5
     sigma_got_it_right_pre=0.05
-    mu_gain = 0.05
+    mu_gain = 0.1
     sigma_gain = 0.1
 
     def guess(detector_label,p):
