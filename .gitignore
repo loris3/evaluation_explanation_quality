@@ -24,7 +24,7 @@ export
 figures
 tables
 dataset_user_study*
-*.db
+
 
 pointing_game_datasets/*
 rendered_datasets_user_study/*
