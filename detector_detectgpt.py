@@ -288,7 +288,7 @@ class DetectorDetectGPT(Detector):
         n_spans = int(n_spans)
         n_masks = 0
         while n_masks < n_spans:
-            start = np.random.randint(0, max(1,len(tokens) - span_length)) # loris: max(1,...)
+            start = np.random.randint(0, max(1,len(tokens) - span_length)) # NEW: max(1,...)
             end = start + span_length
             search_start = max(0, start - self.buffer_size)
             search_end = min(len(tokens), end + self.buffer_size)

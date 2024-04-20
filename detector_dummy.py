@@ -49,4 +49,4 @@ class DetectorDummy(Detector):
     def get_pad_token_id(self):
         return self.tokenizer.additional_special_tokens_ids[0] # TODO
     def get_pad_token(self):
-        return "<|loris|>" # TODO
+        return "<|pert_mask|>" # TODO

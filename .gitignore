@@ -30,3 +30,5 @@ pointing_game_datasets/*
 rendered_datasets_user_study/*
 benchmark_cache
 *copy.ipynb
+radar_chart.ipynb
+masking_test_results.pkl

@@ -36,7 +36,7 @@ Run `dataset_sampling.ipynb`.
 # Detectors
 All detectors are extended to support masked input:
 - In-domain fine-tuned RoBERTa in [Guo et al. 2023](https://arxiv.org/abs/2301.07597): [detector_guo.py](./detector_guo.py)
-- Out-of-domain fine-tuned RoBERTa of [Radford et al. 2018](https://github.com/openai/gpt-2-output-dataset): [gpt2outputdataset/detector_radford.py](./gpt2outputdataset/detector_radford.py)
+- Out-of-domain fine-tuned RoBERTa of [Soliman 2019 et al. / Radford et al. 2018](https://github.com/openai/gpt-2-output-dataset): [gpt2outputdataset/detector_radford.py](./gpt2outputdataset/detector_radford.py)
 - Zero-shot method in [Mitchell et al. 2023](https://arxiv.org/abs/2301.11305v1) with suggestions in [Mireshghallah et al. 2023](https://arxiv.org/abs/2305.09859): [detector_detectgpt.py](./detector_detectgpt.py)
 # Explanation Methods
 SHAP is used as-is.
@@ -44,7 +44,7 @@ SHAP is used as-is.
 Forks of LIME and Anchor are provided as submodules. 
 ## Anchor
 - Addition of a *budget* limiting the number of samples used during search to cap runtime (200 samples per candidate during search, unlimited samples in final "best of each size" round)
-- DistillBERT was replaced with DistillRoBERTA and the mask probability adjusted to increase coherence of perturbations
+- DistillBERT was replaced with DistillRoBERTA and the mask probability adjusted to increase the coherence of perturbations
 - Changes to the rendering functions for the user-study (used to share JS and CSS scope with LIME)
 ## LIME
 - Cosmetic changes to the bar-charts for the user-study
