@@ -3,6 +3,16 @@ A collection of experiments to assess the quality of explanations for detectors 
 
 **Cloning**
 
+**Anonymized version**: manually download submodules specified in `.gitmodules`
+
+https://anonymous.4open.science/r/lime-9CDF/
+
+https://anonymous.4open.science/r/anchor-FB5A
+
+https://anonymous.4open.science/r/survey-7BC2
+
+**Public version**:
+
 `git clone --recurse-submodules repo_url`
 
 `cd repo_dir`
