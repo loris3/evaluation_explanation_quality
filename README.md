@@ -1,18 +1,6 @@
 A collection of experiments to assess the quality of explanations for detectors of machine-generated text.
 # Setup
 
-**Cloning**
-
-**Anonymized version**: manually download submodules specified in `.gitmodules`
-
-https://anonymous.4open.science/r/lime-9CDF/
-
-https://anonymous.4open.science/r/anchor-FB5A
-
-https://anonymous.4open.science/r/survey-7BC2
-
-**Public version**:
-
 `git clone --recurse-submodules repo_url`
 
 `cd repo_dir`
@@ -47,7 +35,7 @@ Run `dataset_sampling.ipynb`.
 All detectors are extended to support masked input:
 - In-domain fine-tuned RoBERTa in [Guo et al. 2023](https://arxiv.org/abs/2301.07597): [detector_guo.py](./detector_guo.py)
 - Out-of-domain fine-tuned RoBERTa of [Soliman 2019 et al. / Radford et al. 2018](https://github.com/openai/gpt-2-output-dataset): [gpt2outputdataset/detector_radford.py](./gpt2outputdataset/detector_radford.py)
-- Zero-shot method in [Mitchell et al. 2023](https://arxiv.org/abs/2301.11305v1) with suggestions in [Mireshghallah et al. 2023](https://arxiv.org/abs/2305.09859): [detector_detectgpt.py](./detector_detectgpt.py)
+- Zero-shot method in [Mitchell et al. 2023](https://arxiv.org/abs/2301.11305v1) with surrogate model as proposed in [Mireshghallah et al. 2023](https://arxiv.org/abs/2305.09859): [detector_detectgpt.py](./detector_detectgpt.py)
 # Explanation Methods
 SHAP is used as-is.
 
