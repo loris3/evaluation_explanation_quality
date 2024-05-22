@@ -184,8 +184,8 @@ class SHAP_Explainer(FI_Explainer):
 import sys
 sys.path.insert(0, '.') # force the use of local package
 import json
-from thesis.anchor.anchor import anchor_text
-from thesis.anchor.anchor import anchor_explanation
+from evaluation_explanation_quality.anchor.anchor import anchor_text
+from evaluation_explanation_quality.anchor.anchor import anchor_explanation
 import spacy
 import torch
 class Anchor_Explainer(FI_Explainer):

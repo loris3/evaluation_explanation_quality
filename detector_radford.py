@@ -1,7 +1,7 @@
 import sys
 
 sys.path.insert(0, '..') # force the use of transformers 2.1.1 (a newer version is used for other modules) to enable loading the detector of radford et al as is
-from thesis.transformers.transformers import RobertaForSequenceClassification, RobertaTokenizer 
+from evaluation_explanation_quality.transformers.transformers import RobertaForSequenceClassification, RobertaTokenizer 
 
 import torch
 import numpy as np
