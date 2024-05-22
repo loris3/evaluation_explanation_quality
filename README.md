@@ -34,7 +34,7 @@ Run `dataset_sampling.ipynb`.
 # Detectors
 All detectors are extended to support masked input:
 - In-domain fine-tuned RoBERTa in [Guo et al. 2023](https://arxiv.org/abs/2301.07597): [detector_guo.py](./detector_guo.py)
-- Out-of-domain fine-tuned RoBERTa of [Soliman 2019 et al. / Radford et al. 2018](https://github.com/openai/gpt-2-output-dataset): [gpt2outputdataset/detector_radford.py](./gpt2outputdataset/detector_radford.py)
+- Out-of-domain fine-tuned RoBERTa of [Soliman 2019 et al. / Radford et al. 2018](https://github.com/openai/gpt-2-output-dataset): [detector_radford.py](./detector_radford.py)
 - Zero-shot method in [Mitchell et al. 2023](https://arxiv.org/abs/2301.11305v1) with surrogate model as proposed in [Mireshghallah et al. 2023](https://arxiv.org/abs/2305.09859): [detector_detectgpt.py](./detector_detectgpt.py)
 # Explanation Methods
 SHAP is used as-is.
