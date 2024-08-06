@@ -30,7 +30,9 @@ You may want to intall pytorch manually.
 Make sure to select the .venv in all notebooks.
 
 **Dataset**
-Run `dataset_sampling.ipynb`. 
+
+Run `dataset_sampling.ipynb` to obtain the base dataset from Guo et al. 2023 (CC-BY-SA). 
+The individual notebooks derive additional synthetic datasets (CC-BY-SA).
 # Detectors
 All detectors are extended to support masked input:
 - In-domain fine-tuned RoBERTa in [Guo et al. 2023](https://arxiv.org/abs/2301.07597): [detector_guo.py](./detector_guo.py)
