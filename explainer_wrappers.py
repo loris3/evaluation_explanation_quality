@@ -204,9 +204,14 @@ class Anchor_Explainer(FI_Explainer):
         return "".join(tokens)
     def get_explanation(self, document, alt=""):
         if alt != "":
-            raise NotImplementedError
-        np.random.seed(42)
-        torch.manual_seed(42) 
+            seed=int(alt.split("_")[-2])
+            np.random.seed(seed)
+            torch.manual_seed(seed) 
+            self.detector.seed = seed
+        else:
+            self.detector.seed = 42 # default
+            np.random.seed(42)
+            torch.manual_seed(42) 
         return self.explainer.explain_instance(document, self.detector.predict_label, 
                                     threshold=0.75, # i.e. tau i.e. min p(anchor applies) in D
                                                     # note that this has little effect on the runtime in practice: either the search will complete fast and with high p, or take up all allowed samples and be in single digits
@@ -230,21 +235,21 @@ class Anchor_Explainer(FI_Explainer):
         assert self.untokenize(tokenized) == exp["instance"] # have to check this somewhere
         return [(tokenized[id], fi) for id,fi in self.get_fi_scores(exp["instance"])[label]]
 
-    def get_fi_scores(self, document, fill=False):
+    def get_fi_scores(self, document, fill=False,alt=""):
         # fill by default
         # ONLY FOR USE WITH TOKEN REMOVAL EXPERIMENTS
         # maps the precision score to all tokens of the corresponding Anchor
         # let {this, is, an, example} be an anchor with precision 0.8, then each token part of the anchor is assigned a "fi score" of 0.8, all other tokens are 0
         # this encoding is so that when running token removal experiments, the tokens of the anchor are removed first as they are considered "important"
         # only the anchor with the highest precision is considered
-        explanation = self.get_explanation_cached(document)
+        explanation = self.get_explanation_cached(document, alt=alt)
         positions = [x.idx for x in self.explainer.nlp(document)] # to resolve ids provided by explanation["positions"]
         assert max(explanation["mean"]) == explanation["mean"][-1] # the next line assumes the longest anchor is the one with the highest precision
         scores = [(i, (explanation["precision"][-1] if pos in explanation["positions"] else 0)) for i, pos in enumerate(positions) ]
         return {0 : scores, 1: [(id, -s) for id, s in scores]} if explanation["prediction"] == 0 else {0 : [(id, -s) for id, s in scores], 1: scores}
     # Note that this uses a fork of Anchor that changes some things in the js files, run npm build to get a new bundle.js!
-    def get_HTML(self, document, bundle=True):
-        exp = self.get_explanation_cached(document)
+    def get_HTML(self, document, bundle=True, alt=""):
+        exp = self.get_explanation_cached(document, alt=alt)
         # as with LIME, use self.get_hash(document) as HTML DOM ids as the default random id_generator won't work if setting seed for each document
         return anchor_explanation.AnchorExplanation('text', exp, self.explainer.as_html).as_html(hash=self.get_hash(document), bundle=bundle)
     
